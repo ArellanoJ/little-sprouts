@@ -35,5 +35,18 @@ export async function POST(req: Request) {
   const { error: gapErr } = await upd;
   if (gapErr) return Response.json({ error: gapErr.message }, { status: 500 });
 
+  // Closure fix: also close open gaps that mention the holiday by name, even under a different theme label.
+  if (mode === "closure") {
+    const needle = String(name).trim().replace(/[%_,()]/g, "");
+    if (needle) {
+      const { error: nameErr } = await supabase
+        .from("gaps")
+        .update({ status: "resolved" })
+        .eq("status", "open")
+        .ilike("question", `%${needle}%`);
+      if (nameErr) return Response.json({ error: nameErr.message }, { status: 500 });
+    }
+  }
+
   return Response.json({ ok: true });
 }
