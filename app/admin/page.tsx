@@ -1,29 +1,80 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 type Log = { id: number; question: string; tier: string; answer: string | null; source: string | null; created_at: string };
 type Gap = { id: number; question: string; theme: string | null; status: string; created_at: string };
 type Fixed = { theme: string; question: string; answer: string; tier: string };
 
-const BADGE: Record<string, string> = {
-  answer: "bg-emerald-100 text-emerald-800",
-  confirm: "bg-sky-100 text-sky-800",
-  gap: "bg-amber-100 text-amber-800",
-  handoff: "bg-rose-100 text-rose-800",
+const TIERS: Record<string, { label: string; badge: string; bar: string }> = {
+  answer: { label: "Answered", badge: "bg-emerald-100 text-emerald-800", bar: "bg-emerald-500" },
+  confirm: { label: "Director confirms", badge: "bg-sky-100 text-sky-800", bar: "bg-sky-500" },
+  gap: { label: "Gap", badge: "bg-amber-100 text-amber-800", bar: "bg-amber-400" },
+  handoff: { label: "Handed off", badge: "bg-rose-100 text-rose-800", bar: "bg-rose-500" },
 };
 const HOLIDAY = /(veterans day|memorial day|labor day|juneteenth|presidents'? day|columbus day|indigenous peoples'? day)/i;
 const JSON_HEADERS = { "content-type": "application/json" };
+const INPUT = "rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
+const PRIMARY = "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50";
 
-function Badge({ tier }: { tier: string }) {
-  return <span className={`rounded-full px-2 py-0.5 text-xs ${BADGE[tier] ?? "bg-stone-100 text-stone-700"}`}>{tier}</span>;
+function ago(iso: string) {
+  const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
-function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function kbLabel(k: string, v: any) {
+  if (k.startsWith("handbook.")) return `Handbook · ${v?.title ?? k.slice(9)}`;
+  if (k.startsWith("faq.")) return `Director answer · ${String(v?.question ?? k.slice(4)).slice(0, 40)}`;
+  const t = k.replace(/_/g, " ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function Badge({ tier }: { tier: string }) {
+  const t = TIERS[tier];
   return (
-    <div className="rounded-lg border bg-white p-3">
-      <div className="text-xs text-stone-500">{label}</div>
-      <div className="text-2xl font-semibold">{value}</div>
-      {sub && <div className="text-xs text-stone-400">{sub}</div>}
+    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${t?.badge ?? "bg-stone-100 text-stone-700"}`}>
+      {t?.label ?? tier}
+    </span>
+  );
+}
+
+function Tile({ icon, label, value, sub, tone }: { icon: string; label: string; value: string; sub?: string; tone: string }) {
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-xs font-medium text-stone-500">
+        <span className={`grid h-7 w-7 place-items-center rounded-lg text-sm ${tone}`}>{icon}</span>
+        {label}
+      </div>
+      <div className="mt-2 text-3xl font-semibold tracking-tight text-stone-900">{value}</div>
+      {sub && <div className="mt-0.5 text-xs text-stone-400">{sub}</div>}
+    </div>
+  );
+}
+
+function OutcomeBar({ log }: { log: Log[] }) {
+  const total = log.length || 1;
+  const counts = Object.keys(TIERS).map((t) => ({ t, n: log.filter((l) => l.tier === t).length }));
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="mb-2 text-xs font-medium text-stone-500">How questions were handled</div>
+      <div className="flex h-2.5 overflow-hidden rounded-full bg-stone-100">
+        {counts.map(({ t, n }) =>
+          n ? <div key={t} className={TIERS[t].bar} style={{ width: `${(n / total) * 100}%` }} /> : null
+        )}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
+        {counts.map(({ t, n }) => (
+          <span key={t} className="flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full ${TIERS[t].bar}`} />
+            {TIERS[t].label} <b className="font-semibold text-stone-800">{n}</b>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -60,33 +111,49 @@ function GapCard({ theme, items, onFixed }: { theme: string; items: Gap[]; onFix
   }
 
   return (
-    <div className="rounded-lg border bg-white p-3">
-      <div className="flex items-center justify-between">
-        <div className="font-medium">{theme}</div>
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+    <div className="rounded-2xl border border-l-4 border-stone-200 border-l-amber-400 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="font-semibold text-stone-900">{theme}</div>
+        <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
           {items.length} {items.length === 1 ? "parent" : "parents"} asked
         </span>
       </div>
-      <ul className="mt-1 list-disc pl-5 text-sm text-stone-600">
-        {items.slice(0, 3).map((g) => <li key={g.id}>{g.question}</li>)}
+      <ul className="mt-2 space-y-0.5 text-sm text-stone-600">
+        {items.slice(0, 3).map((g) => (
+          <li key={g.id} className="flex gap-2"><span className="text-stone-300">“</span>{g.question}</li>
+        ))}
+        {items.length > 3 && <li className="text-xs text-stone-400">+ {items.length - 3} more</li>}
       </ul>
 
-      <div className="mt-3 flex gap-2 text-xs">
-        <button onClick={() => setMode("closure")} className={`rounded-full border px-3 py-1 ${mode === "closure" ? "bg-stone-900 text-white" : ""}`}>Add closure date</button>
-        <button onClick={() => setMode("answer")} className={`rounded-full border px-3 py-1 ${mode === "answer" ? "bg-stone-900 text-white" : ""}`}>Write an answer</button>
+      <div className="mt-3 inline-flex rounded-full bg-stone-100 p-1 text-xs font-medium">
+        {(["closure", "answer"] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={`rounded-full px-3 py-1.5 transition ${mode === m ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
+          >
+            {m === "closure" ? "Add closure date" : "Write an answer"}
+          </button>
+        ))}
       </div>
 
       {mode === "closure" ? (
-        <div className="mt-2 flex flex-wrap gap-2">
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded border px-2 py-1 text-sm" />
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Holiday name" className="flex-1 rounded border px-2 py-1 text-sm" />
+        <div className="mt-3 flex flex-wrap gap-2">
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={INPUT} />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Holiday name" className={`${INPUT} min-w-0 flex-1`} />
         </div>
       ) : (
-        <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} placeholder="Type the answer parents should get" className="mt-2 w-full rounded border px-2 py-1 text-sm" />
+        <textarea
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          rows={3}
+          placeholder="Type the answer parents should get"
+          className={`${INPUT} mt-3 w-full`}
+        />
       )}
 
-      {err && <div className="mt-1 text-xs text-rose-600">{err}</div>}
-      <button onClick={save} disabled={!ready || busy} className="mt-2 rounded bg-emerald-600 px-3 py-1.5 text-sm text-white disabled:opacity-50">
+      {err && <div className="mt-2 text-xs text-rose-600">{err}</div>}
+      <button onClick={save} disabled={!ready || busy} className={`${PRIMARY} mt-3`}>
         {busy ? "Saving and re-running..." : "Save and re-run question"}
       </button>
     </div>
@@ -123,18 +190,23 @@ function Editor({ kb, onSaved }: { kb: Record<string, any>; onSaved: () => void 
   }
 
   return (
-    <div className="rounded-lg border bg-white p-3">
-      <select value={key} onChange={(e) => pick(e.target.value)} className="w-full rounded border px-2 py-1 text-sm">
-        {keys.map((k) => <option key={k} value={k}>{k}</option>)}
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      <p className="mb-3 text-sm text-stone-500">
+        The assistant answers only from this. Facts like hours and tuition are structured data; policies are plain text.
+      </p>
+      <select value={key} onChange={(e) => pick(e.target.value)} className={`${INPUT} w-full`}>
+        {keys.map((k) => (
+          <option key={k} value={k}>{kbLabel(k, kb[k])}</option>
+        ))}
       </select>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={isHandbook ? 6 : 12}
-        className={`mt-2 w-full rounded border px-2 py-1 text-sm ${isHandbook ? "" : "font-mono text-xs"}`}
+        className={`${INPUT} mt-3 w-full ${isHandbook ? "" : "font-mono text-xs"}`}
       />
-      <div className="mt-2 flex items-center gap-3">
-        <button onClick={save} className="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white">Save</button>
+      <div className="mt-3 flex items-center gap-3">
+        <button onClick={save} className={PRIMARY}>Save</button>
         <span className="text-xs text-stone-500">{msg}</span>
       </div>
     </div>
@@ -145,6 +217,8 @@ export default function Admin() {
   const [data, setData] = useState<{ log: Log[]; gaps: Gap[]; kb: Record<string, any> } | null>(null);
   const [fixed, setFixed] = useState<Fixed[]>([]);
   const [err, setErr] = useState("");
+  const [tab, setTab] = useState<"gaps" | "log" | "kb">("gaps");
+  const [filter, setFilter] = useState("all");
 
   async function load() {
     try {
@@ -156,7 +230,10 @@ export default function Admin() {
       setErr(e.message ?? "Could not load data");
     }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    document.title = "Little Sprouts · Control center";
+    load();
+  }, []);
 
   const log = data?.log ?? [];
   const total = log.length;
@@ -174,88 +251,174 @@ export default function Admin() {
   }, [data]);
 
   const tickets = (data?.gaps ?? []).filter((g) => g.status === "ticket");
+  const shownLog = log.filter((l) => filter === "all" || l.tier === filter).slice(0, 100);
 
-  if (err) return <div className="p-6 text-rose-600">{err}</div>;
-  if (!data) return <div className="p-6 text-stone-500">Loading...</div>;
+  if (err) {
+    return (
+      <div className="mx-auto max-w-md p-8">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+          Couldn&apos;t load data: {err}
+          <button onClick={() => { setErr(""); load(); }} className="ml-2 underline">Retry</button>
+        </div>
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-4 p-6">
+        <div className="h-8 w-64 animate-pulse rounded-lg bg-stone-200" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[0, 1, 2, 3].map((n) => <div key={n} className="h-28 animate-pulse rounded-2xl bg-stone-200" />)}
+        </div>
+        <div className="h-48 animate-pulse rounded-2xl bg-stone-200" />
+      </div>
+    );
+  }
+
+  const TABS = [
+    { id: "gaps" as const, label: "Gaps inbox", badge: groups.length },
+    { id: "log" as const, label: "Question log", badge: 0 },
+    { id: "kb" as const, label: "Knowledge", badge: 0 },
+  ];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 bg-stone-50 p-4 text-stone-900">
-      <header className="flex items-baseline justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Little Sprouts: control center</h1>
-          <div className="text-xs text-stone-500">What parents asked, where the assistant struggled, and how to fix it</div>
-        </div>
-        <a href="/parent" className="text-sm text-emerald-700 underline">Parent view</a>
-      </header>
-
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Tile label="Questions" value={String(total)} />
-        <Tile label="Answered by AI" value={`${pct}%`} sub="includes 'director can confirm'" />
-        <Tile label="Open gaps" value={String(groups.length)} sub={`${tickets.length} sensitive tickets`} />
-        <Tile label="Est. staff time saved" value={`${hours} hrs`} sub="assumes 3 min per AI answer" />
-      </section>
-
-      {fixed.length > 0 && (
-        <section className="space-y-2">
-          {fixed.map((f, i) => (
-            <div key={i} className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm">
-              <div className="font-medium text-emerald-800">Fixed: "{f.question}" now resolves</div>
-              <div className="mt-1">{f.answer}</div>
-              <div className="mt-1"><Badge tier={f.tier} /></div>
+    <div className="min-h-dvh bg-stone-50 text-stone-900">
+      <div className="mx-auto max-w-5xl space-y-5 px-4 py-6">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-emerald-100 text-xl">🌱</div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">Little Sprouts: control center</h1>
+              <div className="text-xs text-stone-500">What parents asked, where the assistant struggled, and how to fix it</div>
             </div>
-          ))}
+          </div>
+          <div className="flex gap-2 text-sm">
+            <button onClick={load} className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-stone-700 hover:bg-stone-100">Refresh</button>
+            <Link href="/parent" target="_blank" className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-emerald-700 hover:bg-stone-100">
+              Parent view ↗
+            </Link>
+          </div>
+        </header>
+
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Tile icon="💬" label="Questions" value={String(total)} tone="bg-stone-100" />
+          <Tile icon="✅" label="Answered by AI" value={`${pct}%`} sub="includes 'director can confirm'" tone="bg-emerald-100" />
+          <Tile icon="📥" label="Open gaps" value={String(groups.length)} sub={`${tickets.length} sensitive tickets`} tone="bg-amber-100" />
+          <Tile icon="⏱️" label="Est. staff time saved" value={`${hours} hrs`} sub="assumes 3 min per AI answer" tone="bg-sky-100" />
         </section>
-      )}
 
-      <section>
-        <h2 className="mb-2 font-semibold">Gaps inbox</h2>
-        <div className="space-y-3">
-          {groups.length === 0 && <div className="text-sm text-stone-500">No open gaps.</div>}
-          {groups.map(([theme, items]) => (
-            <GapCard
-              key={theme}
-              theme={theme}
-              items={items}
-              onFixed={(f) => { setFixed((x) => [f, ...x]); load(); }}
-            />
-          ))}
-        </div>
-      </section>
+        <OutcomeBar log={log} />
 
-      <section>
-        <h2 className="mb-2 font-semibold">Sensitive tickets (handed to a person)</h2>
-        <div className="space-y-1">
-          {tickets.length === 0 && <div className="text-sm text-stone-500">None.</div>}
-          {tickets.map((t) => (
-            <div key={t.id} className="rounded border bg-white px-3 py-2 text-sm">
-              <div>{t.question}</div>
-              <div className="text-xs text-stone-500">{t.theme}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-2 font-semibold">Knowledge editor</h2>
-        <Editor key={Object.keys(data.kb).join(",")} kb={data.kb} onSaved={load} />
-      </section>
-
-      <section>
-        <h2 className="mb-2 font-semibold">Question log</h2>
-        <div className="max-h-96 divide-y overflow-y-auto rounded-lg border bg-white">
-          {log.slice(0, 50).map((l) => (
-            <div key={l.id} className="flex items-start justify-between gap-3 px-3 py-2 text-sm">
-              <div>
-                <div>{l.question}</div>
-                <div className="text-xs text-stone-400">
-                  {new Date(l.created_at).toLocaleString()}{l.source ? ` · ${l.source}` : ""}
+        {fixed.length > 0 && (
+          <section className="space-y-2">
+            {fixed.map((f, i) => (
+              <div key={i} className="msg-in rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm">
+                <div className="flex items-center gap-2 font-medium text-emerald-800">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-xs text-white">✓</span>
+                  Fixed: &quot;{f.question}&quot; now resolves
                 </div>
+                <div className="mt-2 text-stone-800">{f.answer}</div>
+                <div className="mt-2"><Badge tier={f.tier} /></div>
               </div>
-              <Badge tier={l.tier} />
-            </div>
+            ))}
+          </section>
+        )}
+
+        <nav className="flex gap-1 border-b border-stone-200">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition ${
+                tab === t.id ? "border-emerald-600 text-emerald-700" : "border-transparent text-stone-500 hover:text-stone-700"
+              }`}
+            >
+              {t.label}
+              {t.badge > 0 && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">{t.badge}</span>
+              )}
+            </button>
           ))}
-        </div>
-      </section>
+        </nav>
+
+        {tab === "gaps" && (
+          <div className="space-y-6">
+            <section className="space-y-3">
+              {groups.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-8 text-center text-sm text-stone-500">
+                  🎉 No open gaps. Everything parents asked has an answer.
+                </div>
+              )}
+              {groups.map(([theme, items]) => (
+                <GapCard
+                  key={theme}
+                  theme={theme}
+                  items={items}
+                  onFixed={(f) => { setFixed((x) => [f, ...x]); load(); }}
+                />
+              ))}
+            </section>
+
+            <section>
+              <h2 className="mb-2 text-sm font-semibold text-stone-700">Sensitive tickets (handed to a person)</h2>
+              <div className="space-y-2">
+                {tickets.length === 0 && <div className="text-sm text-stone-500">None.</div>}
+                {tickets.map((t) => (
+                  <div key={t.id} className="flex items-start justify-between gap-3 rounded-xl border border-l-4 border-stone-200 border-l-rose-400 bg-white px-4 py-2.5 text-sm shadow-sm">
+                    <div>
+                      <div>{t.question}</div>
+                      <div className="text-xs text-stone-500">{t.theme}</div>
+                    </div>
+                    <span className="shrink-0 text-xs text-stone-400">{ago(t.created_at)}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {tab === "log" && (
+          <section>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {["all", ...Object.keys(TIERS)].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                    filter === f ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white text-stone-600 hover:bg-stone-100"
+                  }`}
+                >
+                  {f === "all" ? "All" : TIERS[f].label}
+                </button>
+              ))}
+            </div>
+            <div className="max-h-[32rem] divide-y divide-stone-100 overflow-y-auto rounded-2xl border border-stone-200 bg-white shadow-sm">
+              {shownLog.length === 0 && <div className="p-6 text-center text-sm text-stone-500">Nothing here yet.</div>}
+              {shownLog.map((l) => (
+                <div key={l.id} className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
+                  <div className="min-w-0">
+                    <div className="text-stone-800">{l.question}</div>
+                    <div className="mt-0.5 text-xs text-stone-400">
+                      {ago(l.created_at)}{l.source ? ` · ${l.source}` : ""}
+                    </div>
+                  </div>
+                  <Badge tier={l.tier} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {tab === "kb" && (
+          <section>
+            <Editor key={Object.keys(data.kb).join(",")} kb={data.kb} onSaved={load} />
+          </section>
+        )}
+
+        <footer className="pb-4 text-center text-xs text-stone-400">
+          Prototype with fictional data. No login on this page.
+        </footer>
+      </div>
     </div>
   );
 }
