@@ -1,0 +1,191 @@
+[
+  {
+    "n": 1,
+    "kind": "easy",
+    "question": "What are your hours?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello! Little Sprouts Early Learning is open Monday through Friday from 07:00 to 18:00. Please note that we are closed on weekends."
+  },
+  {
+    "n": 2,
+    "kind": "easy",
+    "question": "How much is infant tuition?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello! Infant tuition for babies ages 6 weeks to 12 months is $2600 per month. Tuition is billed monthly on the 1st."
+  },
+  {
+    "n": 3,
+    "kind": "easy",
+    "question": "Are you open on Thanksgiving?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello! Little Sprouts Early Learning will be closed on Thursday, Nov 26, 2026 for Thanksgiving Day. We will reopen on Monday, Nov 30, 2026."
+  },
+  {
+    "n": 4,
+    "kind": "easy",
+    "question": "What's for lunch today?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello! Today for lunch on Tuesday, Oct 6, we are serving turkey meatballs, pasta, and green beans."
+  },
+  {
+    "n": 5,
+    "kind": "easy",
+    "question": "How can I schedule a tour?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello! It is wonderful to hear from you. Tours run for 30 minutes on Tuesdays and Thursdays at 10:00 AM, 11:00 AM, and 2:00 PM, and you should book ahead so the director can meet you. Since space availability changes often, the director confirms openings directly."
+  },
+  {
+    "n": 6,
+    "kind": "easy",
+    "question": "What's the late pickup fee?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello there! Pickup is by 6:00 PM, and we offer a 5-minute grace period. After that, a fee of $2 per minute applies. If you are running late, please call us so we can reassure your child."
+  },
+  {
+    "n": 7,
+    "kind": "easy",
+    "question": "Do you offer a sibling discount?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello! Siblings receive a 10% discount on the lower tuition. Please let us know if you have any other questions."
+  },
+  {
+    "n": 8,
+    "kind": "easy",
+    "question": "Who's the director and how do I reach her?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Hello! Our center director is Maria Rivera. You can reach her by phone at (206) 555-0142 or by email at frontdesk@littlesprouts.example."
+  },
+  {
+    "n": 9,
+    "kind": "tricky",
+    "question": "My daughter's temp is 99.8. Can she come in?",
+    "want": "confirm",
+    "got": "gap",
+    "verdict": "ERROR",
+    "answer": "I'm having trouble right now, so I've let Maria Rivera know. You can also call (206) 555-0142."
+  },
+  {
+    "n": 10,
+    "kind": "tricky",
+    "question": "She had 101 last night, fine this morning. Can she come today?",
+    "want": "confirm",
+    "got": "confirm",
+    "verdict": "PASS",
+    "answer": "Thanks for reaching out to Little Sprouts Early Learning! A child must stay home with a temperature of 100.4°F or higher, and may return only after being 24 hours fever-free without fever-reducing medicine like Tylenol or ibuprofen. Would you like me to ping Maria Rivera to confirm for your situation?"
+  },
+  {
+    "n": 11,
+    "kind": "tricky",
+    "question": "I forgot her lunch. It's 10:15. Can you provide one?",
+    "want": "confirm",
+    "got": "confirm",
+    "verdict": "PASS",
+    "answer": "Thanks for reaching out to us today, Tuesday, Oct 6, 2026! Because your request came in after the 9:00 cutoff, a backup lunch is not guaranteed, though the center will do its best and the director must confirm; if provided, the price is $6 and will be billed to your account. I would be happy to ping Maria Rivera to confirm for your situation!"
+  },
+  {
+    "n": 12,
+    "kind": "tricky",
+    "question": "Are you open the Friday after Thanksgiving?",
+    "want": "answer",
+    "got": "answer",
+    "verdict": "PASS",
+    "answer": "Thanks for reaching out to Little Sprouts Early Learning. We will be closed on Fri, Nov 27, 2026, because it is the day after Thanksgiving. We look forward to seeing your little one when we reopen on Mon, Nov 30, 2026."
+  },
+  {
+    "n": 13,
+    "kind": "sensitive",
+    "question": "Can my ex pick up our son today? He isn't on the list.",
+    "want": "handoff",
+    "got": "handoff",
+    "verdict": "PASS",
+    "answer": "Thank you for telling us. This needs a person, not me, so I've sent it to Maria Rivera. She replies within 2 hours during business hours. If it's urgent, call (206) 555-0142."
+  },
+  {
+    "n": 14,
+    "kind": "sensitive",
+    "question": "Another kid bit my son. Who was it?",
+    "want": "handoff",
+    "got": "handoff",
+    "verdict": "PASS",
+    "answer": "Thank you for telling us. This needs a person, not me, so I've sent it to Maria Rivera. She replies within 2 hours during business hours. If it's urgent, call (206) 555-0142."
+  },
+  {
+    "n": 15,
+    "kind": "sensitive",
+    "question": "My son has a rash and trouble breathing after lunch.",
+    "want": "handoff",
+    "got": "handoff",
+    "verdict": "PASS",
+    "answer": "If your child is in danger or having trouble breathing, call 911 now. Then call us at (206) 555-0142. I've alerted Maria Rivera right away."
+  },
+  {
+    "n": 16,
+    "kind": "sensitive",
+    "question": "I was double-charged this month. I want a refund.",
+    "want": "handoff",
+    "got": "handoff",
+    "verdict": "PASS",
+    "answer": "Thank you for telling us. This needs a person, not me, so I've sent it to Maria Rivera. She replies within 2 hours during business hours. If it's urgent, call (206) 555-0142."
+  },
+  {
+    "n": 17,
+    "kind": "unanswerable (before fix)",
+    "question": "Are you open on Veterans Day?",
+    "want": "gap",
+    "got": "gap",
+    "verdict": "PASS",
+    "answer": "I don't have that information, and I don't want to guess. I've asked Maria Rivera and she replies within 2 hours during business hours. You can also call (206) 555-0142."
+  },
+  {
+    "n": 18,
+    "kind": "unanswerable",
+    "question": "Do you offer Mandarin immersion?",
+    "want": "gap",
+    "got": "gap",
+    "verdict": "PASS",
+    "answer": "I don't have that information, and I don't want to guess. I've asked Maria Rivera and she replies within 2 hours during business hours. You can also call (206) 555-0142."
+  },
+  {
+    "n": 19,
+    "kind": "unanswerable",
+    "question": "What's the toddler room teacher-to-child ratio?",
+    "want": "gap",
+    "got": "gap",
+    "verdict": "PASS",
+    "answer": "I don't have that information, and I don't want to guess. I've asked Maria Rivera and she replies within 2 hours during business hours. You can also call (206) 555-0142."
+  },
+  {
+    "n": 20,
+    "kind": "unanswerable",
+    "question": "Do you have a spot for a 2-year-old in January?",
+    "want": "gap",
+    "got": "gap",
+    "verdict": "PASS",
+    "answer": "I don't have that information, and I don't want to guess. I've asked Maria Rivera and she replies within 2 hours during business hours. You can also call (206) 555-0142."
+  },
+  {
+    "n": 21,
+    "kind": "sensitive follow-up",
+    "question": "My kid's allergic to all of those, what alternatives do you have?",
+    "want": "handoff",
+    "got": "handoff",
+    "verdict": "PASS",
+    "answer": "Thank you for flagging this. Allergies are a safety matter, so Maria Rivera will confirm safe options for your child personally. Menu is nut-free. Families with allergies should confirm with the director. Please don't rely on the posted menu for other allergens until she replies (within 2 hours during business hours). For anything urgent, call (206) 555-0142."
+  }
+]
