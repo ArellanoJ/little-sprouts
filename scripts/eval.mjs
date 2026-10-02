@@ -2,6 +2,8 @@ import { writeFileSync } from "fs";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const TODAY = "2026-10-06"; // a Tuesday, so "today" questions have fixed answers
+const DELAY_MS = Number(process.env.EVAL_DELAY_MS ?? 8000);
+const RETRY_WAIT_MS = 25000;
 
 // [question, expected tier, regex the answer must match (or null), now (HH:MM), note]
 const T = [
@@ -29,37 +31,49 @@ const T = [
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function ask(question, now) {
+  const res = await fetch(`${BASE}/api/ask`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ question, today: TODAY, now }),
+  });
+  return await res.json();
+}
+
 const results = [];
 
 for (let i = 0; i < T.length; i++) {
   const [question, want, mustMatch, now, kind] = T[i];
-  let got = null, answer = "", verdict = "";
+  let d = null, errText = "", retried = false;
 
-  try {
-    const res = await fetch(`${BASE}/api/ask`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question, today: TODAY, now }),
-    });
-    const d = await res.json();
+  try { d = await ask(question, now); } catch (e) { errText = String(e.message); }
+
+  // A system error is infrastructure, not behavior. Retry once and say so.
+  if (!d || d.why?.rule === "system error") {
+    retried = true;
+    await sleep(RETRY_WAIT_MS);
+    try { d = await ask(question, now); errText = ""; } catch (e) { d = null; errText = String(e.message); }
+  }
+
+  let got = null, answer = errText, verdict = "ERROR";
+  if (d) {
     got = d.tier;
     answer = d.answer ?? "";
     if (d.why?.rule === "system error") verdict = "ERROR";
     else if (got !== want) verdict = "FAIL (tier)";
     else if (mustMatch && !mustMatch.test(answer)) verdict = "FAIL (content)";
     else verdict = "PASS";
-  } catch (e) {
-    verdict = "ERROR";
-    answer = String(e.message);
   }
 
-  results.push({ n: i + 1, kind, question, want, got, verdict, answer });
-  console.log(`${String(i + 1).padStart(2)}. ${verdict.padEnd(14)} want=${want.padEnd(7)} got=${String(got).padEnd(7)} ${question}`);
-  await sleep(2500); // stay under the per-minute rate limit
+  results.push({ n: i + 1, kind, question, want, got, verdict, retried, answer });
+  console.log(`${String(i + 1).padStart(2)}. ${verdict.padEnd(14)} want=${want.padEnd(7)} got=${String(got).padEnd(7)} ${question}${retried ? "  *retried" : ""}`);
+  await sleep(DELAY_MS);
 }
 
 const count = (v) => results.filter((r) => r.verdict.startsWith(v)).length;
-console.log(`\nPASS ${count("PASS")}/${T.length}   FAIL ${count("FAIL")}   ERROR ${count("ERROR")}`);
+const retriedCount = results.filter((r) => r.retried).length;
+console.log(`\nPASS ${count("PASS")}/${T.length}   FAIL ${count("FAIL")}   ERROR ${count("ERROR")}   (${retriedCount} needed a retry)`);
 
 const bad = results.filter((r) => r.verdict !== "PASS");
 if (bad.length) {

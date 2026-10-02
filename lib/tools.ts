@@ -1,4 +1,8 @@
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const FULL: Record<string, string> = {
+  Sun: "Sunday", Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday",
+};
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 type Closure = { date: string; name: string };
 
@@ -6,6 +10,12 @@ type Closure = { date: string; name: string };
 export function dayName(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);
   return DAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+}
+
+// "2026-11-27" -> "Friday, Nov 27". Parents never see a raw ISO date.
+export function pretty(iso: string) {
+  const [, m, d] = iso.split("-").map(Number);
+  return `${FULL[dayName(iso)]}, ${MONTHS[m - 1]} ${d}`;
 }
 
 function addDays(iso: string, n: number) {
@@ -17,6 +27,15 @@ function addDays(iso: string, n: number) {
 export function todayISO(pinned?: string) {
   if (pinned) return pinned;
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles" }).format(new Date());
+}
+
+export function nextOpenDay(iso: string, hours: { days: string[] }, closures: Closure[]) {
+  let d = addDays(iso, 1);
+  for (let i = 0; i < 14; i++) {
+    if (hours.days.includes(dayName(d)) && !closures.some((c) => c.date === d)) return { date: d, weekday: dayName(d) };
+    d = addDays(d, 1);
+  }
+  return null;
 }
 
 // Is the center open on this date? Returns "unknown" when a named holiday isn't on file.
@@ -32,24 +51,21 @@ export function checkClosure(
     : undefined;
   const hit = byDate ?? byName;
 
-  if (hit) return { status: "closed" as const, reason: hit.name, date: hit.date, weekday: dayName(hit.date), reopens: nextOpenDay(hit.date, hours, closures) };
-  if (holidayName) return { status: "unknown" as const };            // holiday named, nothing on file -> gap
-  if (!hours.days.includes(dayName(iso))) return { status: "closed" as const, reason: "weekend", date: iso, weekday: dayName(iso), reopens: nextOpenDay(iso, hours, closures) };
-  return { status: "open" as const, date: iso, weekday: dayName(iso) };
-}
-
-export function nextOpenDay(iso: string, hours: { days: string[] }, closures: Closure[]) {
-  let d = addDays(iso, 1);
-  for (let i = 0; i < 14; i++) {
-    if (hours.days.includes(dayName(d)) && !closures.some((c) => c.date === d)) return { date: d, weekday: dayName(d) };
-    d = addDays(d, 1);
+  if (hit) {
+    const next = nextOpenDay(hit.date, hours, closures);
+    return { status: "closed" as const, reason: hit.name, date: pretty(hit.date), reopens: next ? pretty(next.date) : null };
   }
-  return null;
+  if (holidayName) return { status: "unknown" as const }; // holiday named, nothing on file -> gap
+  if (!hours.days.includes(dayName(iso))) {
+    const next = nextOpenDay(iso, hours, closures);
+    return { status: "closed" as const, reason: "weekend", date: pretty(iso), reopens: next ? pretty(next.date) : null };
+  }
+  return { status: "open" as const, date: pretty(iso) };
 }
 
 export function getMenu(iso: string, menu: Record<string, any>) {
   const day = dayName(iso);
-  return menu[day] ? { weekday: day, ...menu[day], allergen_note: menu.allergen_note } : null;
+  return menu[day] ? { weekday: FULL[day], ...menu[day], allergen_note: menu.allergen_note } : null;
 }
 
 // Arithmetic belongs in code, not in the LLM.

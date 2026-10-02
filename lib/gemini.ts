@@ -5,6 +5,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const TOTAL_BUDGET_MS = 20000; // give up after 20s so the route can still send its safe message
 const PER_CALL_MS = 8000;      // a single hung call can't eat the whole budget
+const RETRY_HINT = /retry in ([\d.]+)s/i;
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -19,7 +20,7 @@ export async function askGemini(prompt: string, json = false): Promise<string> {
   let lastErr: any;
 
   for (const model of models) {
-    for (let attempt = 0; attempt < 2; attempt++) {
+    for (let attempt = 0; attempt < 3; attempt++) {
       if (Date.now() - started > TOTAL_BUDGET_MS) throw lastErr ?? new Error("budget exceeded");
       try {
         const res = await withTimeout(
@@ -36,10 +37,14 @@ export async function askGemini(prompt: string, json = false): Promise<string> {
       } catch (e: any) {
         lastErr = e;
         const msg = String(e?.message);
+        console.warn(`GEMINI FAIL model=${model} attempt=${attempt + 1}: ${msg.slice(0, 160)}`);
         if (/PerDay/.test(msg)) break; // daily quota gone: go straight to the fallback model
         const retryable = /503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|timeout/.test(msg);
         if (!retryable) break; // bad key or bad model name: retrying won't help
-        await sleep(800 * (attempt + 1));
+        const hint = msg.match(RETRY_HINT);
+        const wait = hint ? Math.ceil(parseFloat(hint[1])) * 1000 + 500 : 800 * (attempt + 1);
+        if (Date.now() - started + wait > TOTAL_BUDGET_MS) break; // not enough time left: try the next model
+        await sleep(wait);
       }
     }
   }
