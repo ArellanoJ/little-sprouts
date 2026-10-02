@@ -1,0 +1,99 @@
+{
+  "center": {
+    "name": "Little Sprouts Early Learning",
+    "director": "Maria Rivera",
+    "phone": "(206) 555-0142",
+    "email": "frontdesk@littlesprouts.example",
+    "address": "412 Maple Street, Seattle, WA",
+    "ages_served": "6 weeks to 5 years"
+  },
+  "hours": {
+    "open": "07:00",
+    "close": "18:00",
+    "days": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    "note": "Closed weekends."
+  },
+  "closures": [
+    { "date": "2026-11-26", "name": "Thanksgiving Day" },
+    { "date": "2026-11-27", "name": "Day after Thanksgiving" },
+    { "date": "2026-12-24", "name": "Christmas Eve" },
+    { "date": "2026-12-25", "name": "Christmas Day" },
+    { "date": "2027-01-01", "name": "New Year's Day" },
+    { "date": "2027-01-18", "name": "Martin Luther King Jr. Day" }
+  ],
+  "tuition": {
+    "billing": "Monthly, due on the 1st",
+    "rates": [
+      { "group": "Infant", "ages": "6 weeks to 12 months", "monthly": 2600 },
+      { "group": "Toddler", "ages": "12 to 24 months", "monthly": 2350 },
+      { "group": "Twos", "ages": "2 to 3 years", "monthly": 2100 },
+      { "group": "Preschool", "ages": "3 to 5 years", "monthly": 1850 }
+    ],
+    "registration_fee": 150,
+    "annual_supply_fee": 200,
+    "sibling_discount_percent": 10
+  },
+  "menu": {
+    "Mon": { "snack_am": "Apple slices and cheese", "lunch": "Chicken and rice bowl with steamed broccoli", "snack_pm": "Whole-grain crackers and hummus" },
+    "Tue": { "snack_am": "Banana and yogurt", "lunch": "Turkey meatballs, pasta, and green beans", "snack_pm": "Cucumber and cream cheese" },
+    "Wed": { "snack_am": "Pear slices and oat bar", "lunch": "Veggie quesadilla with black beans and corn", "snack_pm": "Cheddar and grapes" },
+    "Thu": { "snack_am": "Berries and cottage cheese", "lunch": "Baked salmon, sweet potato, and peas", "snack_pm": "Pretzels and sun-butter dip" },
+    "Fri": { "snack_am": "Orange segments and toast", "lunch": "Cheese pizza with side salad", "snack_pm": "Popcorn and melon" },
+    "allergen_note": "Menu is nut-free. Families with allergies should confirm with the director."
+  },
+  "illness_rule": {
+    "fever_threshold_f": 100.4,
+    "fever_free_hours_required": 24,
+    "fever_free_without_medication": true,
+    "vomiting_diarrhea_hours_symptom_free": 24
+  },
+  "lunch_policy": {
+    "backup_lunch_price": 6,
+    "request_cutoff": "09:00",
+    "note": "Families may pack their own lunch. Backup lunch is billed to the account."
+  },
+  "late_pickup": {
+    "grace_minutes": 5,
+    "fee_per_minute": 2
+  },
+  "tours": {
+    "days": ["Tue", "Thu"],
+    "slots": ["10:00", "11:00", "14:00"],
+    "duration_minutes": 30
+  },
+  "handbook.hours_closures": {
+    "title": "Hours & Closures",
+    "updated": "Sep 2026",
+    "body": "We are open Monday to Friday, 7:00 AM to 6:00 PM. We are closed on weekends and on the holidays listed in our closure calendar. Families get at least 30 days' notice of any new closure."
+  },
+  "handbook.illness": {
+    "title": "Illness Policy",
+    "updated": "Sep 2026",
+    "body": "A child must stay home with a temperature of 100.4°F or higher. They may return after 24 hours fever-free without fever-reducing medicine (like Tylenol or ibuprofen). The same 24-hour rule applies after vomiting or diarrhea. If your child develops a fever at school, we will call you and ask for pickup within one hour. Contagious conditions such as pink eye, strep, or hand-foot-and-mouth need a doctor's note or 24 hours of treatment before return."
+  },
+  "handbook.lunch": {
+    "title": "Meals & Lunch Policy",
+    "updated": "Sep 2026",
+    "body": "We serve a morning snack, lunch, and an afternoon snack, following the weekly menu. Families may pack their own lunch instead. If you forget lunch, we can provide a backup lunch for $6, billed to your account, if you let us know by 9:00 AM. After 9:00 AM, we will do our best but cannot guarantee it. Our menu is nut-free."
+  },
+  "handbook.late_pickup": {
+    "title": "Late Pickup Policy",
+    "updated": "Sep 2026",
+    "body": "Pickup is by 6:00 PM. We offer a 5-minute grace period. After that, a fee of $2 per minute applies. If you are running late, please call us so we can reassure your child."
+  },
+  "handbook.tuition": {
+    "title": "Tuition & Billing",
+    "updated": "Sep 2026",
+    "body": "Tuition is billed monthly on the 1st, based on your child's age group. There is a one-time $150 registration fee and a $200 annual supply fee. Siblings receive a 10% discount on the lower tuition. Questions about a specific charge are handled by the director."
+  },
+  "handbook.tours": {
+    "title": "Tours & Enrollment",
+    "updated": "Sep 2026",
+    "body": "Tours are 30 minutes and run Tuesdays and Thursdays at 10:00 AM, 11:00 AM, and 2:00 PM. Please book ahead so the director can meet you. Space availability changes often, so the director confirms openings directly."
+  },
+  "handbook.contact": {
+    "title": "Contact & Escalation",
+    "updated": "Sep 2026",
+    "body": "Director: Maria Rivera. Phone: (206) 555-0142. Email: frontdesk@littlesprouts.example. For emergencies, call 911 first, then the center. The director replies to non-urgent messages within 2 hours during business hours."
+  }
+}
